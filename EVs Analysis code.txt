@@ -1,0 +1,186 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the dataset
+file_path_new = '/content/drive/MyDrive/Dataset/Electric_Vehicle_Data.csv'
+ev_data_new = pd.read_csv(file_path_new)
+
+# General information about the dataset
+ev_data_new.info()
+
+# Display the first few rows of the dataset
+ev_data_new.head()
+
+# Summary statistics for numerical and categorical columns
+ev_data_new.describe(include='all')
+
+# 1. Electric Vehicle Adoption Over Time
+plt.figure(figsize=(10, 6))
+ev_data_new['Model Year'].value_counts().sort_index().plot(kind='bar', color='skyblue')
+plt.title('Number of Electric Vehicles Registered by Model Year')
+plt.xlabel('Model Year')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=45)
+plt.grid(axis='y')
+plt.show()
+
+# 2. Distribution of Electric Vehicles by County (Top 20 Counties)
+plt.figure(figsize=(12, 8))
+top_20_counties = ev_data_new['County'].value_counts().head(20)
+top_20_counties.plot(kind='bar', color='lightgreen')
+plt.title('Distribution of Electric Vehicles by County (Top 20 Counties)')
+plt.xlabel('County')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=90)
+plt.grid(axis='y')
+plt.show()
+
+# 3. Electric Range Analysis for BEVs vs PHEVs
+plt.figure(figsize=(10, 6))
+bev_data = ev_data_new[ev_data_new['Electric Vehicle Type'] == 'Battery Electric Vehicle (BEV)']
+phev_data = ev_data_new[ev_data_new['Electric Vehicle Type'] == 'Plug-in Hybrid Electric Vehicle (PHEV)']
+plt.hist(bev_data['Electric Range'], bins=20, alpha=0.7, label='BEV', color='blue')
+plt.hist(phev_data['Electric Range'], bins=20, alpha=0.7, label='PHEV', color='orange')
+plt.title('Electric Range Distribution for BEVs and PHEVs')
+plt.xlabel('Electric Range (miles)')
+plt.ylabel('Number of Vehicles')
+plt.legend()
+plt.grid(axis='y')
+plt.show()
+
+# 4. CAFV Eligibility Analysis
+caf_eligibility = ev_data_new.groupby(['Electric Vehicle Type', 'Clean Alternative Fuel Vehicle (CAFV) Eligibility']).size().unstack()
+caf_eligibility_percentage = (caf_eligibility.T / caf_eligibility.T.sum() * 100).T
+
+plt.figure(figsize=(10, 6))
+
+# Using distinct and correctly assigned colors for the stacked bars
+caf_eligibility_percentage.plot(kind='bar', stacked=True, color=['#1f77b4', '#2ca02c', '#ff7f0e'])
+
+plt.title('CAFV Eligibility by Electric Vehicle Type')
+plt.xlabel('Electric Vehicle Type')
+plt.ylabel('Percentage of Vehicles')
+plt.legend(title='CAFV Eligibility', loc='upper right')
+plt.xticks(rotation=0)
+plt.grid(axis='y')
+plt.show()
+
+# 5. Popular Electric Vehicle Makes and Models
+# Top 10 Makes
+plt.figure(figsize=(12, 6))
+top_makes = ev_data_new['Make'].value_counts().head(10)
+top_makes.plot(kind='bar', color='mediumpurple')
+plt.title('Top 10 Electric Vehicle Makes')
+plt.xlabel('Make')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=45)
+plt.grid(axis='y')
+plt.show()
+
+# Top 10 Models
+plt.figure(figsize=(12, 6))
+top_models = ev_data_new['Model'].value_counts().head(10)
+top_models.plot(kind='bar', color='teal')
+plt.title('Top 10 Electric Vehicle Models')
+plt.xlabel('Model')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=45)
+plt.grid(axis='y')
+plt.show()
+
+# 6. Distribution of Electric Vehicles by Legislative District
+plt.figure(figsize=(12, 6))
+ev_data_filtered = ev_data_new.dropna(subset=['Legislative District'])
+ev_data_filtered['Legislative District'].value_counts().sort_index().plot(kind='bar', color='salmon')
+plt.title('Distribution of Electric Vehicles by Legislative District')
+plt.xlabel('Legislative District')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=90)
+plt.grid(axis='y')
+plt.show()
+
+# 7. Distribution of Electric Vehicles by Electric Utility
+plt.figure(figsize=(12, 6))
+ev_data_filtered_utility = ev_data_new.dropna(subset=['Electric Utility'])
+top_utilities = ev_data_filtered_utility['Electric Utility'].value_counts().head(10)
+top_utilities.plot(kind='bar', color='dodgerblue')
+plt.title('Top 10 Electric Utilities by Number of EVs Served')
+plt.xlabel('Electric Utility')
+plt.ylabel('Number of Vehicles')
+plt.xticks(rotation=90)
+plt.grid(axis='y')
+plt.show()
+
+# 8. Analysis of BEV vs. PHEV Adoption Trends
+# Overall distribution of BEVs and PHEVs
+ev_type_distribution = ev_data_new['Electric Vehicle Type'].value_counts()
+plt.figure(figsize=(8, 6))
+ev_type_distribution.plot(kind='pie', autopct='%1.1f%%', colors=['lightblue', 'lightcoral'], labels=['BEV', 'PHEV'])
+plt.title('Overall Distribution of BEVs vs PHEVs')
+plt.ylabel('')
+plt.show()
+
+# Adoption Trends Over Time
+ev_trend_by_type = ev_data_new.groupby(['Model Year', 'Electric Vehicle Type']).size().unstack().fillna(0)
+plt.figure(figsize=(12, 8))
+ev_trend_by_type.plot(kind='line', marker='o', ax=plt.gca())
+plt.title('Adoption Trends of BEVs vs PHEVs Over Time')
+plt.xlabel('Model Year')
+plt.ylabel('Number of Vehicles Registered')
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.legend(title='Electric Vehicle Type')
+plt.show()
+
+# Top 5 BEV Models
+top_bev_models = bev_data['Model'].value_counts().head(5)
+print("Top 5 BEV Models:\n", top_bev_models)
+
+# Top 5 PHEV Models
+top_phev_models = phev_data['Model'].value_counts().head(5)
+print("Top 5 PHEV Models:\n", top_phev_models)
+
+# Market Share of Top 10 Electric Vehicle Makes
+total_ev_count = ev_data_new['Make'].count()
+top_makes_market_share = (top_makes / total_ev_count) * 100
+plt.figure(figsize=(10, 6))
+top_makes_market_share.plot(kind='pie', autopct='%1.1f%%', colors=['gold', 'lightblue', 'lightgreen', 'coral', 'lightpink', 'orange', 'purple', 'red', 'brown', 'grey'])
+plt.title('Market Share of Top 10 Electric Vehicle Makes')
+plt.ylabel('')
+plt.show()
+
+# Market Share of Top 10 Electric Vehicle Models
+top_models_market_share = (top_models / total_ev_count) * 100
+plt.figure(figsize=(10, 6))
+top_models_market_share.plot(kind='pie', autopct='%1.1f%%', colors=['skyblue', 'lightcoral', 'lightgreen', 'orange', 'lightpink', 'purple', 'gold', 'teal', 'salmon', 'brown'])
+plt.title('Market Share of Top 10 Electric Vehicle Models')
+plt.ylabel('')
+plt.show()
+
+# Trends in EV Adoption by Top 5 Makes Over Time
+ev_trend_by_make = ev_data_new.groupby(['Model Year', 'Make']).size().unstack().fillna(0)
+top_5_makes = top_makes.index[:5]
+ev_trend_by_top_makes = ev_trend_by_make[top_5_makes]
+plt.figure(figsize=(12, 8))
+ev_trend_by_top_makes.plot(kind='line', marker='o', ax=plt.gca())
+plt.title('Trends in EV Adoption by Top 5 Makes Over Time')
+plt.xlabel('Model Year')
+plt.ylabel('Number of Vehicles Registered')
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.legend(title='Make')
+plt.show()
+
+# Trends in EV Adoption by Top 5 Models Over Time
+ev_trend_by_model = ev_data_new.groupby(['Model Year', 'Model']).size().unstack().fillna(0)
+top_5_models = top_models.index[:5]
+ev_trend_by_top_models = ev_trend_by_model[top_5_models]
+plt.figure(figsize=(12, 8))
+ev_trend_by_top_models.plot(kind='line', marker='o', ax=plt.gca())
+plt.title('Trends in EV Adoption by Top 5 Models Over Time')
+plt.xlabel('Model Year')
+plt.ylabel('Number of Vehicles Registered')
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.legend(title='Model')
+plt.show()
