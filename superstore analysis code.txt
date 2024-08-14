@@ -1,0 +1,152 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+file_path = '/content/drive/MyDrive/Dataset/Sample - Superstore.csv'
+data = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+# Initial Exploratory Data Analysis (EDA)
+data['Order Date'] = pd.to_datetime(data['Order Date'], format='%m/%d/%Y')
+data['Ship Date'] = pd.to_datetime(data['Ship Date'], format='%m/%d/%Y')
+
+# Check for duplicates
+duplicate_rows = data.duplicated().sum()
+
+# Summary statistics for the numerical columns
+summary_statistics = data.describe()
+
+# Sales and Profit Analysis by Category and Sub-Category
+category_sales_profit = data.groupby(['Category', 'Sub-Category']).agg(
+    total_sales=('Sales', 'sum'),
+    total_profit=('Profit', 'sum')
+).sort_values(by='total_sales', ascending=False).reset_index()
+
+plt.figure(figsize=(14, 10))
+sns.barplot(x='total_sales', y='Sub-Category', hue='Category', data=category_sales_profit)
+plt.title('Total Sales by Sub-Category and Category')
+plt.xlabel('Total Sales')
+plt.ylabel('Sub-Category')
+plt.legend(title='Category')
+plt.show()
+
+plt.figure(figsize=(14, 10))
+sns.barplot(x='total_profit', y='Sub-Category', hue='Category', data=category_sales_profit)
+plt.title('Total Profit by Sub-Category and Category')
+plt.xlabel('Total Profit')
+plt.ylabel('Sub-Category')
+plt.legend(title='Category')
+plt.show()
+
+# Trend Analysis - Aggregating Sales over time
+time_trend = data.groupby(pd.Grouper(key='Order Date', freq='M')).agg(
+    total_sales=('Sales', 'sum'),
+    total_profit=('Profit', 'sum')
+).reset_index()
+
+plt.figure(figsize=(14, 8))
+plt.plot(time_trend['Order Date'], time_trend['total_sales'], label='Total Sales', color='blue')
+plt.plot(time_trend['Order Date'], time_trend['total_profit'], label='Total Profit', color='green')
+plt.title('Sales and Profit Trend Over Time')
+plt.xlabel('Date')
+plt.ylabel('Amount')
+plt.legend()
+plt.show()
+
+# Geographical Analysis - Aggregating Sales and Profit by Region
+region_sales_profit = data.groupby('Region').agg(
+    total_sales=('Sales', 'sum'),
+    total_profit=('Profit', 'sum')
+).reset_index()
+
+plt.figure(figsize=(12, 6))
+sns.barplot(x='total_sales', y='Region', data=region_sales_profit, color='blue', label='Total Sales')
+sns.barplot(x='total_profit', y='Region', data=region_sales_profit, color='green', label='Total Profit')
+plt.title('Sales and Profit by Region')
+plt.xlabel('Amount')
+plt.ylabel('Region')
+plt.legend()
+plt.show()
+
+# Customer Segment Analysis - Aggregating Sales and Profit by Segment
+segment_sales_profit = data.groupby('Segment').agg(
+    total_sales=('Sales', 'sum'),
+    total_profit=('Profit', 'sum')
+).reset_index()
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='total_sales', y='Segment', data=segment_sales_profit, color='blue', label='Total Sales')
+sns.barplot(x='total_profit', y='Segment', data=segment_sales_profit, color='green', label='Total Profit')
+plt.title('Sales and Profit by Customer Segment')
+plt.xlabel('Amount')
+plt.ylabel('Segment')
+plt.legend()
+plt.show()
+
+# Product Analysis - Aggregating Sales and Profit by Product Name
+product_sales_profit = data.groupby('Product Name').agg(
+    total_sales=('Sales', 'sum'),
+    total_profit=('Profit', 'sum')
+).sort_values(by='total_sales', ascending=False).reset_index()
+
+# Identify top 5 and bottom 5 products by sales
+top_5_products = product_sales_profit.head(5)
+bottom_5_products = product_sales_profit.tail(5)
+
+# Plotting top 5 products by sales
+plt.figure(figsize=(10, 6))
+sns.barplot(x='total_sales', y='Product Name', data=top_5_products, palette='Blues_d')
+plt.title('Top 5 Products by Sales')
+plt.xlabel('Total Sales')
+plt.ylabel('Product Name')
+plt.show()
+
+# Plotting bottom 5 products by sales
+plt.figure(figsize=(10, 6))
+sns.barplot(x='total_sales', y='Product Name', data=bottom_5_products, palette='Reds_d')
+plt.title('Bottom 5 Products by Sales')
+plt.xlabel('Total Sales')
+plt.ylabel('Product Name')
+plt.show()
+
+# Plotting profitability of top 5 products by profit
+top_5_products_by_profit = product_sales_profit.sort_values(by='total_profit', ascending=False).head(5)
+plt.figure(figsize=(10, 6))
+sns.barplot(x='total_profit', y='Product Name', data=top_5_products_by_profit, palette='Greens_d')
+plt.title('Top 5 Products by Profit')
+plt.xlabel('Total Profit')
+plt.ylabel('Product Name')
+plt.show()
+
+# Plotting loss of bottom 5 products by profit
+bottom_5_products_by_profit = product_sales_profit.sort_values(by='total_profit', ascending=True).head(5)
+plt.figure(figsize=(10, 6))
+sns.barplot(x='total_profit', y='Product Name', data=bottom_5_products_by_profit, palette='Oranges_d')
+plt.title('Bottom 5 Products by Profit (Losses)')
+plt.xlabel('Total Profit')
+plt.ylabel('Product Name')
+plt.show()
+
+# Correlation Analysis - Focusing on Sales, Profit, and Discount
+correlation_matrix = data[['Sales', 'Profit', 'Discount']].corr()
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0)
+plt.title('Correlation Matrix for Sales, Profit, and Discount')
+plt.show()
+
+# Calculate the latest date in the dataset
+latest_date = data['Order Date'].max()
+
+# Preparing data for RFM Analysis
+rfm = data.groupby('Customer ID').agg({
+    'Order Date': lambda x: (latest_date - x.max()).days,
+    'Order ID': 'nunique',
+    'Sales': 'sum'
+}).reset_index()
+
+# Rename columns to reflect RFM metrics
+rfm.columns = ['Customer ID', 'Recency', 'Frequency', 'Monetary']
+
+# Display the RFM table
+rfm.head()
