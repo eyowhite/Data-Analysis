@@ -1,0 +1,174 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the Excel file
+file_path = '/content/drive/MyDrive/Dataset/Call-Center-Sentiment-Data-for-Analysis.xlsx'
+
+# Checking the sheet names to understand the structure of the Excel file
+excel_data = pd.ExcelFile(file_path)
+sheet_names = excel_data.sheet_names
+
+# Load the data from the identified sheet
+df = pd.read_excel(file_path, sheet_name='Call Center Data')
+
+# Display the first few rows of the dataset to understand its structure
+df.head(), df.info()
+
+# Summary statistics for numerical columns
+numerical_summary = df.describe()
+
+# Summary statistics for categorical columns
+categorical_summary = df.describe(include=['object'])
+
+# Distribution Analysis
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Histogram for CSAT Score
+axes[0, 0].hist(df['CSAT Score'], bins=10, color='skyblue', edgecolor='black')
+axes[0, 0].set_title('CSAT Score Distribution')
+axes[0, 0].set_xlabel('CSAT Score')
+axes[0, 0].set_ylabel('Frequency')
+
+# Boxplot for CSAT Score
+axes[0, 1].boxplot(df['CSAT Score'], vert=False, patch_artist=True)
+axes[0, 1].set_title('CSAT Score Boxplot')
+axes[0, 1].set_xlabel('CSAT Score')
+
+# Histogram for Call Duration
+axes[1, 0].hist(df['Call Duration (Minutes)'], bins=10, color='lightgreen', edgecolor='black')
+axes[1, 0].set_title('Call Duration Distribution')
+axes[1, 0].set_xlabel('Call Duration (Minutes)')
+axes[1, 0].set_ylabel('Frequency')
+
+# Boxplot for Call Duration
+axes[1, 1].boxplot(df['Call Duration (Minutes)'], vert=False, patch_artist=True)
+axes[1, 1].set_title('Call Duration Boxplot')
+axes[1, 1].set_xlabel('Call Duration (Minutes)')
+
+plt.tight_layout()
+plt.show()
+
+# Sentiment Analysis
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Sentiment', data=df, palette='viridis')
+plt.title('Sentiment Distribution')
+plt.xlabel('Sentiment')
+plt.ylabel('Count')
+plt.show()
+
+# Boxplot for CSAT Score by Sentiment
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Sentiment', y='CSAT Score', data=df, palette='viridis')
+plt.title('CSAT Score by Sentiment')
+plt.xlabel('Sentiment')
+plt.ylabel('CSAT Score')
+plt.show()
+
+# Boxplot for Call Duration by Sentiment
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Sentiment', y='Call Duration (Minutes)', data=df, palette='viridis')
+plt.title('Call Duration by Sentiment')
+plt.xlabel('Sentiment')
+plt.ylabel('Call Duration (Minutes)')
+plt.show()
+
+# Boxplot for CSAT Score by Channel
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Channel', y='CSAT Score', data=df, palette='Set2')
+plt.title('CSAT Score by Channel')
+plt.xlabel('Channel')
+plt.ylabel('CSAT Score')
+plt.show()
+
+# Boxplot for CSAT Score by Response Time
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Response Time', y='CSAT Score', data=df, palette='Set2')
+plt.title('CSAT Score by Response Time')
+plt.xlabel('Response Time')
+plt.ylabel('CSAT Score')
+plt.show()
+
+# Boxplot for Sentiment by Channel
+plt.figure(figsize=(10, 6))
+sns.countplot(x='Sentiment', hue='Channel', data=df, palette='Set2')
+plt.title('Sentiment Distribution by Channel')
+plt.xlabel('Sentiment')
+plt.ylabel('Count')
+plt.show()
+
+# Correlation Analysis
+# Encode the Sentiment variable numerically for correlation analysis
+sentiment_mapping = {
+    "Very Negative": 1,
+    "Negative": 2,
+    "Neutral": 3,
+    "Positive": 4,
+    "Very Positive": 5
+}
+
+df['Sentiment Score'] = df['Sentiment'].map(sentiment_mapping)
+
+# Calculate the correlation matrix for relevant variables
+correlation_matrix = df[['CSAT Score', 'Call Duration (Minutes)', 'Sentiment Score']].corr()
+
+# Visualization 1: Correlation Heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", vmin=-1, vmax=1)
+plt.title('Correlation Heatmap: CSAT Score, Call Duration, Sentiment Score')
+plt.show()
+
+# Investigating Patterns in Delayed Response Times
+response_time_group = df.groupby('Response Time').agg({
+    'CSAT Score': ['mean', 'std'],
+    'Sentiment Score': ['mean', 'std'],
+    'Call Duration (Minutes)': ['mean', 'std'],
+    'ID': 'count'
+}).reset_index()
+
+# Flattening the multi-level columns
+response_time_group.columns = ['Response Time', 'Avg CSAT Score', 'CSAT Std Dev', 
+                               'Avg Sentiment Score', 'Sentiment Std Dev', 
+                               'Avg Call Duration (Minutes)', 'Duration Std Dev', 'Count']
+
+# Bar plot for Average CSAT Score by Response Time
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Response Time', y='Avg CSAT Score', data=response_time_group, palette='Set1')
+plt.title('Average CSAT Score by Response Time')
+plt.xlabel('Response Time')
+plt.ylabel('Average CSAT Score')
+plt.show()
+
+# Bar plot for Average Sentiment Score by Response Time
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Response Time', y='Avg Sentiment Score', data=response_time_group, palette='Set2')
+plt.title('Average Sentiment Score by Response Time')
+plt.xlabel('Response Time')
+plt.ylabel('Average Sentiment Score')
+plt.show()
+
+# Bar plot for Average Call Duration by Response Time
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Response Time', y='Avg Call Duration (Minutes)', data=response_time_group, palette='Set3')
+plt.title('Average Call Duration by Response Time')
+plt.xlabel('Response Time')
+plt.ylabel('Average Call Duration (Minutes)')
+plt.show()
+
+# Time-Series Analysis
+time_series_data = df.resample('D', on='Call Timestamp').agg({
+    'CSAT Score': 'mean',
+    'Sentiment Score': 'mean'
+}).reset_index()
+
+# Plotting the time-series data
+plt.figure(figsize=(14, 7))
+plt.plot(time_series_data['Call Timestamp'], time_series_data['CSAT Score'], marker='o', label='Avg CSAT Score')
+plt.plot(time_series_data['Call Timestamp'], time_series_data['Sentiment Score'], marker='x', label='Avg Sentiment Score')
+plt.title('Time-Series Analysis of CSAT and Sentiment Scores')
+plt.xlabel('Date')
+plt.ylabel('Score')
+plt.legend()
+plt.grid(True)
+plt.xticks(rotation=45)
+plt.show()
