@@ -1,0 +1,62 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Load the cleaned dataset
+df_cleaned = pd.read_csv('/content/drive/MyDrive/Dataset/final_cleaned_adult_dataset.csv')
+
+# Ensure the 'income' column is treated as a binary categorical variable
+df_cleaned['income'] = df_cleaned['income'].apply(lambda x: 1 if x > 0 else 0)
+
+# Split the data into features and target
+X = df_cleaned.drop('income', axis=1)
+y = df_cleaned['income']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
+
+# Initialize the Random Forest model
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the model on the training data
+rf_model.fit(X_train, y_train)
+
+# Predictions
+y_pred = rf_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+class_report = classification_report(y_test, y_pred)
+
+# Print accuracy, confusion matrix, and classification report
+print(f'Accuracy: {accuracy}')
+print('Confusion Matrix:')
+print(conf_matrix)
+print('Classification Report:')
+print(class_report)
+
+# Normalize the confusion matrix by the true label counts
+conf_matrix_normalized = conf_matrix.astype('float') / conf_matrix.sum(axis=1)[:, np.newaxis]
+conf_matrix_normalized = np.round(conf_matrix_normalized, 3)
+
+# Plot the normalized confusion matrix
+plt.figure(figsize=(10, 8))
+sns.heatmap(conf_matrix_normalized, annot=True, fmt='.3f', cmap='Blues', xticklabels=['<=50K', '>50K'], yticklabels=['<=50K', '>50K'])
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Normalized Confusion Matrix for Binary Classification (<=50K vs >50K)')
+
+# Save the plot
+conf_matrix_plot_path = '/content/drive/MyDrive/Dataset/confusion_matrix_plot.png'
+plt.savefig(conf_matrix_plot_path)
+
+# Display the plot
+plt.show()
+
+conf_matrix_plot_path
