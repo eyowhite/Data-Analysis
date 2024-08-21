@@ -1,0 +1,110 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
+
+# Load the dataset
+file_path = '/content/drive/MyDrive/Dataset/cleaned_bank_data.csv'
+data = pd.read_csv(file_path)
+
+# Display the first few rows and summary information about the dataset
+data_info = data.info()
+first_few_rows = data.head()
+
+# Summary statistics for numerical variables
+summary_statistics = data.describe()
+
+# Checking for missing values
+missing_values = data.isnull().sum()
+
+# Set the style for the plots
+sns.set(style="whitegrid")
+
+# Plotting histograms for numerical variables
+numerical_columns = ['age', 'balance', 'duration', 'campaign', 'pdays', 'previous']
+data[numerical_columns].hist(bins=15, figsize=(15, 10), layout=(2, 3), color='#86bf91', zorder=2, rwidth=0.9)
+plt.suptitle('Distribution of Numerical Variables', fontsize=16)
+plt.show()
+
+# Bar plots for categorical variables
+categorical_columns = ['job', 'marital', 'education', 'default', 'housing', 'loan', 'contact', 'month', 'poutcome', 'y']
+
+fig, axes = plt.subplots(5, 2, figsize=(15, 20))
+for i, col in enumerate(categorical_columns):
+    sns.countplot(y=col, data=data, ax=axes[i//2, i%2], palette='viridis')
+    axes[i//2, i%2].set_title(f'Distribution of {col}')
+    axes[i//2, i%2].set_xlabel('')
+    axes[i//2, i%2].set_ylabel('')
+plt.tight_layout()
+plt.show()
+
+# Encode categorical variables
+encoded_data = data.copy()
+label_encoders = {}
+for column in categorical_columns[:-1]:  # Exclude 'y'
+    le = LabelEncoder()
+    encoded_data[column] = le.fit_transform(data[column])
+    label_encoders[column] = le
+
+# Encode the target variable 'y'
+le_y = LabelEncoder()
+encoded_data['y'] = le_y.fit_transform(data['y'])
+
+# Define features and target
+X = encoded_data.drop(columns='y')
+y = encoded_data['y']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Feature scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Fit a Random Forest Classifier
+rf_model = RandomForestClassifier(random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Predictions
+y_pred = rf_model.predict(X_test)
+y_prob = rf_model.predict_proba(X_test)[:, 1]
+
+# Generate the confusion matrix, classification report, and ROC curve data
+conf_matrix = confusion_matrix(y_test, y_pred)
+class_report = classification_report(y_test, y_pred, target_names=le_y.classes_)
+
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+roc_auc = auc(fpr, tpr)
+
+# Creating dataframes for summary statistics, confusion matrix, and classification report
+summary_statistics_df = summary_statistics
+
+conf_matrix_df = pd.DataFrame(conf_matrix, 
+                              index=["Actual No", "Actual Yes"], 
+                              columns=["Predicted No", "Predicted Yes"])
+
+class_report_df = pd.DataFrame(classification_report(y_test, y_pred, target_names=le_y.classes_, output_dict=True)).transpose()
+
+# Plotting the ROC Curve
+plt.figure(figsize=(10, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc="lower right")
+plt.show()
+
+# Plotting the confusion matrix as a heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix_df, annot=True, fmt="d", cmap="Blues", cbar=False)
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.show()
