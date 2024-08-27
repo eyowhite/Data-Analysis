@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
 
 # Load the dataset
+# Please Note: Replace the file path location with the appropriate file paths on your system or cloud location
 file_path = '/content/drive/MyDrive/Dataset/cleaned_bank_data.csv'
 data = pd.read_csv(file_path)
 
