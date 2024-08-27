@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Load the Excel file
+# Please Note: Replace the file path location with the appropriate file paths on your system or cloud location
 file_path = '/content/drive/MyDrive/Dataset/Call-Center-Sentiment-Data-for-Analysis.xlsx'
 
 # Checking the sheet names to understand the structure of the Excel file
