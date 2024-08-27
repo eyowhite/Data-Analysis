@@ -1,5 +1,4 @@
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
-
 # Other imports remain the same
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
 
 # Load the dataset
+# Please Note: Replace the file path location with the appropriate file paths on your system or cloud location
 file_path = '/path_to/fraud_data.csv'
 df = pd.read_csv(file_path)
 
