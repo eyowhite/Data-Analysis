@@ -8,6 +8,7 @@ import seaborn as sns
 import numpy as np
 
 # Load the cleaned dataset
+# Please Note: Replace the file path location with the appropriate file paths on your system or cloud location
 df_cleaned = pd.read_csv('/content/drive/MyDrive/Dataset/final_cleaned_adult_dataset.csv')
 
 # Ensure the 'income' column is treated as a binary categorical variable
@@ -53,6 +54,7 @@ plt.ylabel('True Label')
 plt.title('Normalized Confusion Matrix for Binary Classification (<=50K vs >50K)')
 
 # Save the plot
+# Please Note: Replace the file path location with the appropriate file paths on your system or cloud location
 conf_matrix_plot_path = '/content/drive/MyDrive/Dataset/confusion_matrix_plot.png'
 plt.savefig(conf_matrix_plot_path)
 
